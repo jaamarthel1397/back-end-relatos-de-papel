@@ -1,9 +1,15 @@
 package com.relatospapel.ms_books_catalogue.service.impl;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch.core.SearchResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,8 +21,9 @@ import com.relatospapel.ms_books_catalogue.entity.BookEntity;
 import com.relatospapel.ms_books_catalogue.exception.NotFoundException;
 import com.relatospapel.ms_books_catalogue.repository.BookRepository;
 import com.relatospapel.ms_books_catalogue.repository.CategoryRepository;
-import com.relatospapel.ms_books_catalogue.repository.spec.BookSpecifications;
+import com.relatospapel.ms_books_catalogue.search.document.BookDocument;
 import com.relatospapel.ms_books_catalogue.service.BookService;
+import com.relatospapel.ms_books_catalogue.service.SearchSyncService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,8 +31,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class BookServiceImpl implements BookService {
-  private final BookRepository bookRepo;
-  private final CategoryRepository categoryRepo;
+
+  private final BookRepository bookRepo;             
+  private final CategoryRepository categoryRepo;      
+  private final SearchSyncService searchSyncService; 
+  private final OpenSearchClient openSearchClient;
 
   @Override
   public BookResponse create(BookCreateRequest req) {
@@ -45,7 +55,11 @@ public class BookServiceImpl implements BookService {
       book.setCategory(cat);
     }
 
-    return toResponse(bookRepo.save(book));
+    BookEntity saved = bookRepo.save(book);
+
+    searchSyncService.upsertBook(saved);
+
+    return toResponse(saved);
   }
 
   @Override
@@ -57,10 +71,93 @@ public class BookServiceImpl implements BookService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<BookResponse> search(String title, String author, LocalDate publicationDate,
-                                   UUID categoryId, String isbn, Integer rating, Boolean visible) {
-    var spec = BookSpecifications.byFilters(title, author, publicationDate, categoryId, isbn, rating, visible);
-    return bookRepo.findAll(spec).stream().map(this::toResponse).toList();
+  public List<BookResponse> search(String q, LocalDate publicationDate,
+      UUID categoryId, Integer rating, Boolean visible) {
+
+    final String term = (q == null) ? "" : q.trim();
+    final boolean hasText = !term.isBlank();
+
+    try {
+      SearchResponse<BookDocument> response = openSearchClient.search(s -> {
+        s.index(SearchIndexServiceImpl.BOOKS_INDEX).size(100);
+
+        boolean hasFilters =
+            publicationDate != null ||
+            categoryId != null ||
+            rating != null ||
+            visible != null;
+
+        if (!hasText && !hasFilters) {
+          s.query(x -> x.matchAll(m -> m));
+          return s;
+        }
+
+        s.query(x -> x.bool(b -> {
+
+          if (hasText) {
+            b.must(m -> m.simpleQueryString(sqs -> sqs
+                .query(term)
+                .fields(List.of(
+                    "title^3",
+                    "title._2gram^2",
+                    "title._3gram^2",
+                    "author^2",
+                    "author._2gram",
+                    "author._3gram",
+                    "isbn^4",
+                    "category.name"
+                ))
+                .defaultOperator(org.opensearch.client.opensearch._types.query_dsl.Operator.And)
+            ));
+          }
+
+          if (publicationDate != null) {
+            b.filter(f -> f.term(t -> t.field("publicationDate")
+                .value(FieldValue.of(publicationDate.toString()))));
+          }
+          if (categoryId != null) {
+            b.filter(f -> f.term(t -> t.field("category.id")
+                .value(FieldValue.of(categoryId.toString()))));
+          }
+          if (rating != null) {
+            b.filter(f -> f.term(t -> t.field("rating").value(FieldValue.of(rating))));
+          }
+          if (visible != null) {
+            b.filter(f -> f.term(t -> t.field("visible").value(FieldValue.of(visible))));
+          }
+
+          return b;
+        }));
+
+        return s;
+      }, BookDocument.class);
+
+      return response.hits().hits().stream()
+          .map(h -> {
+            BookDocument d = h.source();
+            if (d == null) return null;
+
+            return BookResponse.builder()
+                .id(d.getId() != null ? UUID.fromString(d.getId()) : null)
+                .title(d.getTitle())
+                .author(d.getAuthor())
+                .publicationDate(d.getPublicationDate() != null ? LocalDate.parse(d.getPublicationDate()) : null)
+                .isbn(d.getIsbn())
+                .rating(d.getRating())
+                .visible(d.getVisible())
+                .stock(d.getStock())
+                .categoryId(d.getCategory() != null && d.getCategory().getId() != null
+                    ? UUID.fromString(d.getCategory().getId())
+                    : null)
+                .categoryName(d.getCategory() != null ? d.getCategory().getName() : null)
+                .build();
+          })
+          .filter(Objects::nonNull)
+          .toList();
+
+    } catch (IOException | OpenSearchException e) {
+      return List.of();
+    }
   }
 
   @Override
@@ -81,13 +178,19 @@ public class BookServiceImpl implements BookService {
       b.setCategory(cat);
     }
 
-    return toResponse(bookRepo.save(b));
+    BookEntity saved = bookRepo.save(b);
+
+    searchSyncService.upsertBook(saved);
+
+    return toResponse(saved);
   }
 
   @Override
   public void delete(UUID id) {
     if (!bookRepo.existsById(id)) throw new NotFoundException("Libro no encontrado");
     bookRepo.deleteById(id);
+
+    searchSyncService.deleteBook(id);
   }
 
   @Override
