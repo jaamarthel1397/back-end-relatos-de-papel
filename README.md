@@ -46,12 +46,12 @@ docker-compose up -d
 
 Esto creará:
 
-- **MySQL** en `localhost:3307`
+- **MySQL** en `18.117.141.17:3307`
   - Base de datos: `relatos_catalogue`
   - Usuario: `relatos`
   - Contraseña: `relatos`
 
-- **PostgreSQL** en `localhost:5433`
+- **PostgreSQL** en `18.117.141.17:5433`
   - Base de datos: `relatos_payments`
   - Usuario: `relatos`
   - Contraseña: `relatos`
@@ -105,7 +105,7 @@ mvn spring-boot:run
 
 Esperar hasta ver: `Started EurekaServerApplication`
 
-Verificar en: http://localhost:8761
+Verificar en: http://18.117.141.17:8761
 
 #### 2️⃣ MS Books Catalogue
 
@@ -141,22 +141,22 @@ Todas las peticiones deben pasar por el API Gateway (puerto 8080):
 #### Catálogo de Libros
 
 ```
-GET    http://localhost:8080/catalogue/books
-POST   http://localhost:8080/catalogue/books
-GET    http://localhost:8080/catalogue/books/{id}
-PATCH  http://localhost:8080/catalogue/books/{id}
-DELETE http://localhost:8080/catalogue/books/{id}
-GET    http://localhost:8080/catalogue/books/{id}/availability?quantity=5
+GET    http://18.117.141.17:8080/catalogue/books
+POST   http://18.117.141.17:8080/catalogue/books
+GET    http://18.117.141.17:8080/catalogue/books/{id}
+PATCH  http://18.117.141.17:8080/catalogue/books/{id}
+DELETE http://18.117.141.17:8080/catalogue/books/{id}
+GET    http://18.117.141.17:8080/catalogue/books/{id}/availability?quantity=5
 
-GET    http://localhost:8080/catalogue/categories
-POST   http://localhost:8080/catalogue/categories
-GET    http://localhost:8080/catalogue/categories/{id}
+GET    http://18.117.141.17:8080/catalogue/categories
+POST   http://18.117.141.17:8080/catalogue/categories
+GET    http://18.117.141.17:8080/catalogue/categories/{id}
 ```
 
 #### Pagos
 
 ```
-http://localhost:8080/payments/**
+http://18.117.141.17:8080/payments/**
 ```
 
 ## 🗄️ Conexión a las Bases de Datos
@@ -166,7 +166,7 @@ http://localhost:8080/payments/**
 **Usando MySQL Workbench o CLI:**
 
 ```bash
-mysql -h localhost -P 3307 -u relatos -p
+mysql -h 18.117.141.17 -P 3307 -u relatos -p
 # Password: relatos
 
 USE relatos_catalogue;
@@ -185,7 +185,7 @@ docker exec -it mysql_catalogue mysql -u relatos -p relatos_catalogue
 **Usando pgAdmin o psql:**
 
 ```bash
-psql -h localhost -p 5433 -U relatos -d relatos_payments
+psql -h 18.117.141.17 -p 5433 -U relatos -d relatos_payments
 # Password: relatos
 
 \dt  -- Listar tablas
@@ -204,21 +204,21 @@ docker exec -it postgres_payments psql -U relatos -d relatos_payments
 Visualizar todos los servicios registrados:
 
 ```
-http://localhost:8761
+http://18.117.141.17:8761
 ```
 
 ### Actuator Endpoints
 
-- **API Gateway:** http://localhost:8080/actuator
-- **MS Catalogue:** http://localhost:8081/actuator
-- **MS Payments:** http://localhost:8082/actuator
+- **API Gateway:** http://18.117.141.17:8080/actuator
+- **MS Catalogue:** http://18.117.141.17:8081/actuator
+- **MS Payments:** http://18.117.141.17:8082/actuator
 
 ## 🧪 Probar la API
 
 ### Ejemplo: Crear una Categoría
 
 ```bash
-curl -X POST http://localhost:8080/catalogue/categories \
+curl -X POST http://18.117.141.17:8080/catalogue/categories \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Ficción",
@@ -229,7 +229,7 @@ curl -X POST http://localhost:8080/catalogue/categories \
 ### Ejemplo: Crear un Libro
 
 ```bash
-curl -X POST http://localhost:8080/catalogue/books \
+curl -X POST http://18.117.141.17:8080/catalogue/books \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Cien Años de Soledad",
@@ -246,13 +246,13 @@ curl -X POST http://localhost:8080/catalogue/books \
 
 ```bash
 # Buscar todos los libros
-curl http://localhost:8080/catalogue/books
+curl http://18.117.141.17:8080/catalogue/books
 
 # Buscar por autor
-curl "http://localhost:8080/catalogue/books?author=García"
+curl "http://18.117.141.17:8080/catalogue/books?author=García"
 
 # Buscar por categoría
-curl "http://localhost:8080/catalogue/books?categoryId=<uuid>"
+curl "http://18.117.141.17:8080/catalogue/books?categoryId=<uuid>"
 ```
 
 ## ⚠️ Solución de Problemas
@@ -272,7 +272,7 @@ docker-compose logs postgres_payments
 ### Error de conexión a Eureka
 
 - Asegurarse de que Eureka Server esté corriendo primero
-- Verificar que esté accesible en http://localhost:8761
+- Verificar que esté accesible en http://18.117.141.17:8761
 - Esperar 30 segundos para que los servicios se registren
 
 ### Error de conexión a base de datos
@@ -332,9 +332,9 @@ Todos los mensajes de error y validación están en español:
 
 ## 🔗 Enlaces Útiles
 
-- **Eureka:** http://localhost:8761
-- **API Gateway:** http://localhost:8080
-- **API Gateway Health:** http://localhost:8080/actuator/health
+- **Eureka:** http://18.117.141.17:8761
+- **API Gateway:** http://18.117.141.17:8080
+- **API Gateway Health:** http://18.117.141.17:8080/actuator/health
 
 ---
 

@@ -108,7 +108,7 @@ services:
     container_name: relatos-swagger-ui
     restart: unless-stopped
     environment:
-      - API_URL=http://localhost:8080/v3/api-docs
+      - API_URL=http://18.117.141.17:8080/v3/api-docs
     ports:
       - "8083:8080"
     networks:

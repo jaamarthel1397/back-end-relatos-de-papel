@@ -16,7 +16,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         Server gatewayServer = new Server();
-        gatewayServer.setUrl("http://localhost:8080");
+        gatewayServer.setUrl("http://18.117.141.17:8080");
         gatewayServer.setDescription("API Gateway - Relatos de Papel");
 
         Contact contact = new Contact();

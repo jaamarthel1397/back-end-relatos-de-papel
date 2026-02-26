@@ -51,4 +51,4 @@ USER appuser
 EXPOSE 8761 8080 8081 8082
 
 # Comando por defecto
-CMD ["sh", "-c", "echo 'Starting Relatos de Papel Backend...' && echo 'Available services:' && echo ' - Eureka Server: http://localhost:8761' && echo ' - API Gateway: http://localhost:8080' && echo ' - Books Catalogue: http://localhost:8081' && echo ' - Books Payments: http://localhost:8082' && tail -f /dev/null"]
+CMD ["sh", "-c", "echo 'Starting Relatos de Papel Backend...' && echo 'Available services:' && echo ' - Eureka Server: http://18.117.141.17:8761' && echo ' - API Gateway: http://18.117.141.17:8080' && echo ' - Books Catalogue: http://18.117.141.17:8081' && echo ' - Books Payments: http://18.117.141.17:8082' && tail -f /dev/null"]

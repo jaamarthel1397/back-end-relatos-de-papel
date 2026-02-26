@@ -152,10 +152,10 @@ Todos los servicios incluyen health checks que puedes verificar:
 
 ```bash
 # Ver estado de salud
-curl http://localhost:8761/actuator/health
-curl http://localhost:8080/actuator/health
-curl http://localhost:8081/actuator/health
-curl http://localhost:8082/actuator/health
+curl http://18.117.141.17:8761/actuator/health
+curl http://18.117.141.17:8080/actuator/health
+curl http://18.117.141.17:8081/actuator/health
+curl http://18.117.141.17:8082/actuator/health
 ```
 
 ### Métricas
@@ -164,10 +164,10 @@ Los servicios exponen métricas en `/actuator/metrics`:
 
 ```bash
 # Ver métricas generales
-curl http://localhost:8080/actuator/metrics
+curl http://18.117.141.17:8080/actuator/metrics
 
 # Ver métricas específicas
-curl "http://localhost:8080/actuator/metrics/jvm.memory.used"
+curl "http://18.117.141.17:8080/actuator/metrics/jvm.memory.used"
 ```
 
 ## 🚨 Solución de Problemas

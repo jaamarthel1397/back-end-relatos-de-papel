@@ -51,7 +51,7 @@ Esperar a ver: `Started ApiGatewayApplication`
 ### Crear una Categoría
 
 ```bash
-curl -X POST http://localhost:8080/catalogue/categories \
+curl -X POST http://18.117.141.17:8080/catalogue/categories \
   -H "Content-Type: application/json" \
   -d '{"name": "Ficción", "description": "Libros de ficción"}'
 ```
@@ -59,7 +59,7 @@ curl -X POST http://localhost:8080/catalogue/categories \
 ### Crear un Libro
 
 ```bash
-curl -X POST http://localhost:8080/catalogue/books \
+curl -X POST http://18.117.141.17:8080/catalogue/books \
   -H "Content-Type: application/json" \
   -d '{
     "title": "El Quijote",
@@ -75,13 +75,13 @@ curl -X POST http://localhost:8080/catalogue/books \
 
 ```bash
 # Todos los libros
-curl http://localhost:8080/catalogue/books
+curl http://18.117.141.17:8080/catalogue/books
 
 # Por autor
-curl "http://localhost:8080/catalogue/books?author=Cervantes"
+curl "http://18.117.141.17:8080/catalogue/books?author=Cervantes"
 
 # Por rating
-curl "http://localhost:8080/catalogue/books?rating=5"
+curl "http://18.117.141.17:8080/catalogue/books?rating=5"
 ```
 
 ---
@@ -90,10 +90,10 @@ curl "http://localhost:8080/catalogue/books?rating=5"
 
 | Servicio               | URL                   | Descripción                     |
 | ---------------------- | --------------------- | ------------------------------- |
-| **Eureka**             | http://localhost:8761 | Dashboard de servicios          |
-| **API Gateway**        | http://localhost:8080 | Punto de entrada principal      |
-| **Catálogo (directo)** | http://localhost:8081 | Acceso directo al microservicio |
-| **Pagos (directo)**    | http://localhost:8082 | Acceso directo al microservicio |
+| **Eureka**             | http://18.117.141.17:8761 | Dashboard de servicios          |
+| **API Gateway**        | http://18.117.141.17:8080 | Punto de entrada principal      |
+| **Catálogo (directo)** | http://18.117.141.17:8081 | Acceso directo al microservicio |
+| **Pagos (directo)**    | http://18.117.141.17:8082 | Acceso directo al microservicio |
 
 ---
 
@@ -129,7 +129,7 @@ SELECT * FROM <tabla>;
 
 ### Servicio no se registra en Eureka
 
-1. Verificar que Eureka esté corriendo: http://localhost:8761
+1. Verificar que Eureka esté corriendo: http://18.117.141.17:8761
 2. Esperar 30 segundos para el registro
 3. Revisar logs del servicio
 
