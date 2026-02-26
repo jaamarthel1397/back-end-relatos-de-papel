@@ -37,4 +37,3 @@ public class OpenAPIConfig {
             .servers(List.of(gatewayServer, localServer));
     }
 }
-//
