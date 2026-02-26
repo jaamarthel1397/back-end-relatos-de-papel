@@ -15,11 +15,11 @@ public class OpenAPIConfig {
   @Bean
   public OpenAPI customOpenAPI() {
     Server localServer = new Server();
-    localServer.setUrl("http://3.143.207.187:8081");
+    localServer.setUrl("http://18.117.141.17:8081");
     localServer.setDescription("Servidor local - MS Books Catalogue");
 
     Server gatewayServer = new Server();
-    gatewayServer.setUrl("http://3.143.207.187:8080");
+    gatewayServer.setUrl("http://18.117.141.17:8080");
     gatewayServer.setDescription("API Gateway - Acceso recomendado");
 
     Contact contact = new Contact();
