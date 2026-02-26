@@ -1,35 +1,140 @@
-services:
-  mysql_catalogue:
-    image: mysql:8.4
-    container_name: mysql_catalogue
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: relatos_catalogue
-      MYSQL_USER: relatos
-      MYSQL_PASSWORD: relatos
-    ports:
-      - "3307:3306"
-    volumes:
-      - ./scripts/mysql-init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+version: "3.8"
 
-  postgres_payments:
-    image: postgres:16
-    container_name: postgres_payments
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: relatos-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: relatos_payments
+      POSTGRES_DB: relatos_database
       POSTGRES_USER: relatos
       POSTGRES_PASSWORD: relatos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
     ports:
       - "5433:5432"
-    volumes:
-      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - relatos-network
+
+  # Servidor Eureka (Discovery)
+  eureka-server:
+    build:
+      context: "./eureka-server"
+      dockerfile: Dockerfile
+    container_name: relatos-eureka
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - postgres
+    networks:
+      - relatos-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U relatos -d relatos_payments"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: "./api-gateway"
+      dockerfile: Dockerfile
+    container_name: relatos-api-gateway
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SERVER_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - postgres
+    networks:
+      - relatos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Microservicio de Catálogo de Libros
+  ms-books-catalogue:
+    build:
+      context: "./ms-books-catalogue"
+      dockerfile: Dockerfile
+    container_name: relatos-books-catalogue
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SERVER_PORT=8081
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/relatos_database
+      - SPRING_DATASOURCE_USERNAME=relatos
+      - SPRING_DATASOURCE_PASSWORD=relatos
+      - OPENSEARCH_URL=${OPENSEARCH_URL:-}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - postgres
+    networks:
+      - relatos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Microservicio de Pagos
+  ms-books-payments:
+    build:
+      context: "./ms-books-payments"
+      dockerfile: Dockerfile
+    container_name: relatos-books-payments
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SERVER_PORT=8082
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/relatos_database
+      - SPRING_DATASOURCE_USERNAME=relatos
+      - SPRING_DATASOURCE_PASSWORD=relatos
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+      - postgres
+    networks:
+      - relatos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Swagger UI para documentación centralizada
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: relatos-swagger-ui
+    restart: unless-stopped
+    environment:
+      - API_URL=http://localhost:8080/v3/api-docs
+    ports:
+      - "8083:8080"
+    networks:
+      - relatos-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  relatos-network:
+    driver: bridge
