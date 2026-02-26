@@ -34,11 +34,7 @@ services:
       - postgres
     networks:
       - relatos-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
 
   # API Gateway
   api-gateway:
@@ -58,11 +54,7 @@ services:
       - postgres
     networks:
       - relatos-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
 
   # Microservicio de Catálogo de Libros
   ms-books-catalogue:
@@ -86,11 +78,6 @@ services:
       - postgres
     networks:
       - relatos-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # Microservicio de Pagos
   ms-books-payments:
@@ -113,11 +100,7 @@ services:
       - postgres
     networks:
       - relatos-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+   
 
   # Swagger UI para documentación centralizada
   swagger-ui:
